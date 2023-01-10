@@ -4,8 +4,8 @@ Imports VBPurchasingDbLib.Model
 
 Namespace Repository
 
-    Public Class StocksRepository
-        Implements IStocksRepository
+    Public Class StockPhotoRepository
+        Implements IStockPhotoRepository
 
         'Dependency Injection
         Private ReadOnly _context As IRepositoryContext
@@ -17,11 +17,11 @@ Namespace Repository
             _context = context
         End Sub
 
-        Public Function FindAll() As List(Of Stocks) Implements IStocksRepository.FindAll
-            Dim stockList As New List(Of Stocks)
+        Public Function FindAll() As List(Of StockPhoto) Implements IStockPhotoRepository.FindAll
+            Dim result As New List(Of StockPhoto)
             'declare statement
-            Dim sql As String = "SELECT * FROM purchasing.stocks " &
-                                "ORDER BY stock_id ASC;"
+            Dim sql As String = "SELECT * FROM purchasing.stock_photo " &
+                                "ORDER BY spho_id ASC;"
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
 
@@ -31,19 +31,13 @@ Namespace Repository
                         Dim reader = cmd.ExecuteReader()
 
                         While reader.Read()
-                            stockList.Add(New Stocks() With {
+                            result.Add(New StockPhoto() With {
                             .Id = reader.GetInt32(0),
-                            .Name = reader.GetString(1),
-                            .Description = reader.GetString(2),
-                            .Quantity = reader.GetInt16(3),
-                            .ReorderPoint = reader.GetInt16(4),
-                            .Used = reader.GetInt16(5),
-                            .Scrap = reader.GetInt16(6),
-                            .Price = reader.GetDecimal(7),
-                            .StandarCost = reader.GetDecimal(8),
-                            .Size = reader.GetString(9),
-                            .Color = reader.GetString(10),
-                            .ModifiedDate = reader.GetDateTime(11)
+                            .Thumbnail = reader.GetString(1),
+                            .Photo = reader.GetString(2),
+                            .Primary = reader.GetBoolean(3),
+                            .Url = reader.GetString(4),
+                            .StockId = reader.GetInt32(5)
                             })
                         End While
 
@@ -54,14 +48,14 @@ Namespace Repository
                     End Try
                 End Using
             End Using
-            Return stockList
+            Return result
         End Function
 
-        Public Async Function FindAllAsync() As Task(Of List(Of Stocks)) Implements IStocksRepository.FindAllAsync
-            Dim stockList As New List(Of Stocks)
+        Public Async Function FindAllAsync() As Task(Of List(Of StockPhoto)) Implements IStockPhotoRepository.FindAllAsync
+            Dim result As New List(Of StockPhoto)
             'declare statement
-            Dim sql As String = "SELECT * FROM purchasing.stocks " &
-                                "ORDER BY stock_id ASC;"
+            Dim sql As String = "SELECT * FROM purchasing.stock_photo " &
+                                "ORDER BY spho_id ASC;"
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
 
@@ -71,19 +65,13 @@ Namespace Repository
                         Dim reader = Await cmd.ExecuteReaderAsync()
 
                         While reader.Read()
-                            stockList.Add(New Stocks() With {
+                            result.Add(New StockPhoto() With {
                             .Id = reader.GetInt32(0),
-                            .Name = reader.GetString(1),
-                            .Description = reader.GetString(2),
-                            .Quantity = reader.GetInt16(3),
-                            .ReorderPoint = reader.GetInt16(4),
-                            .Used = reader.GetInt16(5),
-                            .Scrap = reader.GetInt16(6),
-                            .Price = reader.GetDecimal(7),
-                            .StandarCost = reader.GetDecimal(8),
-                            .Size = reader.GetString(9),
-                            .Color = reader.GetString(10),
-                            .ModifiedDate = reader.GetDateTime(11)
+                            .Thumbnail = reader.GetString(1),
+                            .Photo = reader.GetString(2),
+                            .Primary = reader.GetBoolean(3),
+                            .Url = reader.GetString(4),
+                            .StockId = reader.GetInt32(5)
                             })
                         End While
 
@@ -94,13 +82,13 @@ Namespace Repository
                     End Try
                 End Using
             End Using
-            Return stockList
+            Return result
         End Function
 
-        Public Function FindById(id As Integer) As Stocks Implements IStocksRepository.FindById
-            Dim stocks As New Stocks With {.Id = id}
+        Public Function FindById(id As Integer) As StockPhoto Implements IStockPhotoRepository.FindById
+            Dim result As New StockPhoto With {.Id = id}
             'declare statement
-            Dim sql As String = "SELECT * FROM purchasing.stocks WHERE stock_id = @id"
+            Dim sql As String = "SELECT * FROM purchasing.stock_photo WHERE spho_id = @id"
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
                 Using cmd As New SqlCommand With {.Connection = conn, .CommandText = sql}
@@ -108,21 +96,17 @@ Namespace Repository
                     Try
                         conn.Open()
                         Dim reader = cmd.ExecuteReader()
+
                         If reader.HasRows Then
                             reader.Read()
-                            stocks.Id = reader.GetInt32(0)
-                            Stocks.Name = reader.GetString(1)
-                            Stocks.Description = reader.GetString(2)
-                            Stocks.Quantity = reader.GetInt16(3)
-                            Stocks.ReorderPoint = reader.GetInt16(4)
-                            Stocks.Used = reader.GetInt16(5)
-                            Stocks.Scrap = reader.GetInt16(6)
-                            Stocks.Price = reader.GetDecimal(7)
-                            Stocks.StandarCost = reader.GetDecimal(8)
-                            Stocks.Size = reader.GetString(9)
-                            Stocks.Color = reader.GetString(10)
-                            Stocks.ModifiedDate = reader.GetDateTime(11)
+                            result.Id = reader.GetInt32(0)
+                            result.Thumbnail = reader.GetString(1)
+                            result.Photo = reader.GetString(2)
+                            result.Primary = reader.GetBoolean(3)
+                            result.Url = reader.GetString(4)
+                            result.StockId = reader.GetInt32(5)
                         End If
+
                         reader.Close()
                         conn.Close()
                     Catch ex As Exception
@@ -130,53 +114,53 @@ Namespace Repository
                     End Try
                 End Using
             End Using
-            Return stocks
+            Return result
         End Function
 
-        Public Function Create(stocks As Stocks) As Stocks Implements IStocksRepository.Create
-            Dim newStock As New Stocks()
+        Public Function Create(stockPhoto As StockPhoto) As StockPhoto Implements IStockPhotoRepository.Create
+            Dim result As New StockPhoto()
 
             'declare statement primary key using identity integer
             Dim sqlIdentity As String = "
-                                         INSERT INTO purchasing.stocks(stock_name, stock_description, stock_size, stock_color) 
-                                         VALUES (@name, @description, @size, @color) SELECT CAST(scope_identity() as int)
+                                         INSERT INTO purchasing.stock_photo(spho_thumbnail_filename, spho_photo_filename, spho_primary, spho_url, spho_stock_id) 
+                                         VALUES (@thumbnail, @photo, @primary, @url, @stockId) SELECT CAST(scope_identity() as int)
                                         "
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
                 Using cmd As New SqlCommand With {.Connection = conn, .CommandText = sqlIdentity}
-
-                    cmd.Parameters.AddWithValue("@name", stocks.Name)
-                    cmd.Parameters.AddWithValue("@description", stocks.Description)
-                    cmd.Parameters.AddWithValue("@size", stocks.Size)
-                    cmd.Parameters.AddWithValue("@color", stocks.Color)
+                    cmd.Parameters.AddWithValue("@thumbnail", stockPhoto.Thumbnail)
+                    cmd.Parameters.AddWithValue("@photo", stockPhoto.Photo)
+                    cmd.Parameters.AddWithValue("@primary", stockPhoto.Primary)
+                    cmd.Parameters.AddWithValue("@url", stockPhoto.Url)
+                    cmd.Parameters.AddWithValue("@stockId", stockPhoto.StockId)
                     Try
                         conn.Open()
                         'executescalar return 1 row & get first column
-                        Dim stockId As Int32 = Convert.ToInt32(cmd.ExecuteScalar())
-                        newStock = FindById(stockId)
+                        Dim id As Int32 = Convert.ToInt32(cmd.ExecuteScalar())
+                        result = FindById(id)
                         conn.Close()
                     Catch ex As Exception
                         Console.WriteLine(ex.Message)
                     End Try
                 End Using
             End Using
-            Return newStock
+            Return result
         End Function
 
-        Public Function UpdateBySp(id As Integer, name As String, description As String, size As String, color As String, Optional showCommand As Boolean = False) As Boolean Implements IStocksRepository.UpdateBySp
-            Dim updateStock As New Stocks()
+        Public Function UpdateBySp(id As Integer, thumbnail As String, photo As String, primary As Boolean, url As String, stockId As Integer, Optional showCommand As Boolean = False) As Boolean Implements IStockPhotoRepository.UpdateBySp
+            Dim result As New StockPhoto()
 
-            'declare statement
-            Dim sql As String = "purchasing.spUpdateStocks"
-
+            'declare statement primary key using identity integer
+            Dim sqlIdentity As String = "purchasing.spUpdateStockPhoto"
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
-                Using cmd As New SqlCommand With {.Connection = conn, .CommandText = sql, .CommandType = Data.CommandType.StoredProcedure}
+                Using cmd As New SqlCommand With {.Connection = conn, .CommandText = sqlIdentity, .CommandType = Data.CommandType.StoredProcedure}
                     cmd.Parameters.AddWithValue("@id", id)
-                    cmd.Parameters.AddWithValue("@name", name)
-                    cmd.Parameters.AddWithValue("@description", description)
-                    cmd.Parameters.AddWithValue("@size", size)
-                    cmd.Parameters.AddWithValue("@color", color)
+                    cmd.Parameters.AddWithValue("@thumbnail", thumbnail)
+                    cmd.Parameters.AddWithValue("@photo", photo)
+                    cmd.Parameters.AddWithValue("@primary", primary)
+                    cmd.Parameters.AddWithValue("@url", url)
+                    cmd.Parameters.AddWithValue("@stockId", stockId)
 
                     If showCommand Then
                         Console.WriteLine(cmd.CommandText)
@@ -193,11 +177,12 @@ Namespace Repository
             End Using
             Return True
         End Function
-        Public Function Delete(id As Integer) As Integer Implements IStocksRepository.Delete
+
+        Public Function Delete(id As Integer) As Integer Implements IStockPhotoRepository.Delete
             Dim rowEffect As Int32 = 0
 
             'declare statement
-            Dim sql As String = "DELETE FROM purchasing.stocks WHERE stock_id = @id;"
+            Dim sql As String = "DELETE FROM purchasing.stock_photo WHERE spho_id = @id;"
 
             'try to connect
             Using conn As New SqlConnection With {.ConnectionString = _context.GetConnectionString()}
@@ -216,4 +201,5 @@ Namespace Repository
             Return rowEffect
         End Function
     End Class
+
 End Namespace

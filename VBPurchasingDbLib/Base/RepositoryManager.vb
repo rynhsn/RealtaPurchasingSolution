@@ -8,6 +8,7 @@ Namespace Base
 
         Private _vendorRepository As IVendorRepository
         Private _stocksRepository As IStocksRepository
+        Private _stockPhotoRepository As IStockPhotoRepository
         Private ReadOnly _repositoryContext As IRepositoryContext
 
         Public Sub New(repositoryContext As IRepositoryContext)
@@ -29,6 +30,15 @@ Namespace Base
                     _stocksRepository = New StocksRepository(_repositoryContext)
                 End If
                 Return _stocksRepository
+            End Get
+        End Property
+
+        Public ReadOnly Property StockPhoto As IStockPhotoRepository Implements IRepositoryManager.StockPhoto
+            Get
+                If _stockPhotoRepository Is Nothing Then
+                    _stockPhotoRepository = New StockPhotoRepository(_repositoryContext)
+                End If
+                Return _stockPhotoRepository
             End Get
         End Property
     End Class
